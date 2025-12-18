@@ -1,5 +1,9 @@
 # StandX Python SDK
 
+> **⚠️ Community Build - Unofficial**  
+> This is a community-maintained, unofficial Python SDK for the StandX Perpetual Futures API.  
+> It is not officially supported by StandX. Use at your own risk.
+
 A comprehensive Python SDK for interacting with the StandX Perpetual Futures API.
 
 ## Features

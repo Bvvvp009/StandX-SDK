@@ -1,5 +1,9 @@
 # StandX SDK Examples
 
+> **⚠️ Community Build - Unofficial**  
+> This SDK and examples are community-maintained and unofficial.  
+> Not officially supported by StandX. Use at your own risk.
+
 This directory contains comprehensive examples demonstrating how to use the StandX SDK with generated credentials.
 
 ## Prerequisites
