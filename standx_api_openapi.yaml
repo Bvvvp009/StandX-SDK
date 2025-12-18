@@ -1,0 +1,1057 @@
+openapi: 3.0.3
+info:
+  title: StandX Perpetual Futures API
+  description: REST API for StandX Perpetual Futures Trading
+  version: 1.0.0
+  contact:
+    name: StandX API Support
+    url: https://docs.standx.com
+
+servers:
+  - url: https://perps.standx.com
+    description: Production server
+
+tags:
+  - name: Trading
+    description: Trading operations
+  - name: User
+    description: User account and data queries
+  - name: Market
+    description: Public market data
+  - name: Kline
+    description: Candlestick/Kline data
+  - name: Health
+    description: Health check endpoints
+
+paths:
+  /api/new_order:
+    post:
+      tags: [Trading]
+      summary: Create new order
+      description: Create a new trading order
+      security:
+        - BodySignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewOrderRequest'
+      responses:
+        '200':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/cancel_order:
+    post:
+      tags: [Trading]
+      summary: Cancel order
+      description: Cancel an existing order
+      security:
+        - BodySignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelOrderRequest'
+      responses:
+        '200':
+          description: Order canceled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+  /api/cancel_orders:
+    post:
+      tags: [Trading]
+      summary: Cancel multiple orders
+      description: Cancel multiple orders at once
+      security:
+        - BodySignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelOrdersRequest'
+      responses:
+        '200':
+          description: Orders canceled
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+
+  /api/change_leverage:
+    post:
+      tags: [Trading]
+      summary: Change leverage
+      description: Change position leverage
+      security:
+        - BodySignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeLeverageRequest'
+      responses:
+        '200':
+          description: Leverage changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /api/change_margin_mode:
+    post:
+      tags: [Trading]
+      summary: Change margin mode
+      description: Change position margin mode
+      security:
+        - BodySignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeMarginModeRequest'
+      responses:
+        '200':
+          description: Margin mode changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /api/transfer_margin:
+    post:
+      tags: [User]
+      summary: Transfer margin
+      description: Transfer margin to/from position
+      security:
+        - BodySignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferMarginRequest'
+      responses:
+        '200':
+          description: Margin transferred successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+
+  /api/query_order:
+    get:
+      tags: [User]
+      summary: Query order
+      description: Get order details
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: order_id
+          in: query
+          schema:
+            type: integer
+        - name: cl_ord_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /api/query_orders:
+    get:
+      tags: [User]
+      summary: Query user orders
+      description: Get list of user orders
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: symbol
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /api/query_open_orders:
+    get:
+      tags: [User]
+      summary: Query open orders
+      description: Get all open orders
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: symbol
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of open orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /api/query_trades:
+    get:
+      tags: [User]
+      summary: Query user trades
+      description: Get user trade history
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: symbol
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trade'
+
+  /api/query_position_config:
+    get:
+      tags: [User]
+      summary: Query position config
+      description: Get position configuration
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Position configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionConfig'
+
+  /api/query_positions:
+    get:
+      tags: [User]
+      summary: Query positions
+      description: Get user positions
+      security:
+        - JWTAuth: []
+      parameters:
+        - name: symbol
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Position'
+
+  /api/query_user_balances:
+    get:
+      tags: [User]
+      summary: Query user balances
+      description: Get user account balances
+      security:
+        - JWTAuth: []
+      responses:
+        '200':
+          description: List of balances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Balance'
+
+  /api/query_symbol_info:
+    get:
+      tags: [Market]
+      summary: Query symbol info
+      description: Get symbol information
+      parameters:
+        - name: symbol
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Symbol information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SymbolInfo'
+
+  /api/query_symbol_market:
+    get:
+      tags: [Market]
+      summary: Query symbol market
+      description: Get symbol market data
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Market data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SymbolMarket'
+
+  /api/query_symbol_price:
+    get:
+      tags: [Market]
+      summary: Query symbol price
+      description: Get current symbol price
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Price data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SymbolPrice'
+
+  /api/query_depth_book:
+    get:
+      tags: [Market]
+      summary: Query depth book
+      description: Get order book depth
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Order book data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepthBook'
+
+  /api/query_recent_trades:
+    get:
+      tags: [Market]
+      summary: Query recent trades
+      description: Get recent trades
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Recent trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecentTrade'
+
+  /api/query_funding_rates:
+    get:
+      tags: [Market]
+      summary: Query funding rates
+      description: Get funding rates
+      parameters:
+        - name: symbol
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Funding rate data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRates'
+
+  /api/kline/time:
+    get:
+      tags: [Kline]
+      summary: Get server time
+      description: Get server timestamp
+      responses:
+        '200':
+          description: Server time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerTime'
+
+  /api/kline/history:
+    get:
+      tags: [Kline]
+      summary: Get kline history
+      description: Get candlestick/Kline data
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: resolution
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Resolution'
+        - name: from
+          in: query
+          schema:
+            type: integer
+            description: Start timestamp
+        - name: to
+          in: query
+          schema:
+            type: integer
+            description: End timestamp
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 500
+      responses:
+        '200':
+          description: Kline data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Kline'
+
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Check API health status
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    BodySignature:
+      type: apiKey
+      in: header
+      name: x-request-signature
+      description: Body signature authentication
+
+  schemas:
+    # Request Schemas
+    NewOrderRequest:
+      type: object
+      required:
+        - symbol
+        - side
+        - order_type
+        - qty
+        - time_in_force
+      properties:
+        symbol:
+          type: string
+          example: BTC-USD
+        side:
+          $ref: '#/components/schemas/OrderSide'
+        order_type:
+          $ref: '#/components/schemas/OrderType'
+        qty:
+          type: string
+          description: Order quantity as decimal string
+          example: "0.1"
+        price:
+          type: string
+          description: Order price as decimal string (required for limit orders)
+          example: "50000"
+        time_in_force:
+          $ref: '#/components/schemas/TimeInForce'
+        reduce_only:
+          type: boolean
+        cl_ord_id:
+          type: string
+          description: Client order ID
+        margin_mode:
+          $ref: '#/components/schemas/MarginMode'
+        leverage:
+          type: integer
+
+    CancelOrderRequest:
+      type: object
+      properties:
+        order_id:
+          type: integer
+        cl_ord_id:
+          type: string
+      oneOf:
+        - required: [order_id]
+        - required: [cl_ord_id]
+
+    CancelOrdersRequest:
+      type: object
+      properties:
+        order_id_list:
+          type: array
+          items:
+            type: integer
+        cl_ord_id_list:
+          type: array
+          items:
+            type: string
+      oneOf:
+        - required: [order_id_list]
+        - required: [cl_ord_id_list]
+
+    ChangeLeverageRequest:
+      type: object
+      required:
+        - symbol
+        - leverage
+      properties:
+        symbol:
+          type: string
+        leverage:
+          type: integer
+
+    ChangeMarginModeRequest:
+      type: object
+      required:
+        - symbol
+        - margin_mode
+      properties:
+        symbol:
+          type: string
+        margin_mode:
+          $ref: '#/components/schemas/MarginMode'
+
+    TransferMarginRequest:
+      type: object
+      required:
+        - symbol
+        - amount_in
+      properties:
+        symbol:
+          type: string
+        amount_in:
+          type: string
+          description: Amount as decimal string
+        direction:
+          type: string
+          enum: [add, remove]
+          default: add
+
+    # Response Schemas
+    OrderResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        request_id:
+          type: string
+        order_id:
+          type: integer
+        cl_ord_id:
+          type: string
+
+    StandardResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        request_id:
+          type: string
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        cl_ord_id:
+          type: string
+        symbol:
+          type: string
+        side:
+          $ref: '#/components/schemas/OrderSide'
+        order_type:
+          $ref: '#/components/schemas/OrderType'
+        qty:
+          type: string
+        price:
+          type: string
+        time_in_force:
+          $ref: '#/components/schemas/TimeInForce'
+        reduce_only:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        fill_qty:
+          type: string
+        fill_avg_price:
+          type: string
+        avail_locked:
+          type: string
+        closed_block:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        created_block:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+        leverage:
+          type: string
+        liq_id:
+          type: integer
+        margin:
+          type: string
+        payload:
+          type: object
+          nullable: true
+        position_id:
+          type: integer
+        remark:
+          type: string
+        source:
+          type: string
+        user:
+          type: string
+
+    Trade:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        side:
+          $ref: '#/components/schemas/OrderSide'
+        qty:
+          type: string
+        price:
+          type: string
+        timestamp:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        order_id:
+          type: integer
+        user:
+          type: string
+
+    Position:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        qty:
+          type: string
+        entry_price:
+          type: string
+        entry_value:
+          type: string
+        leverage:
+          type: integer
+        margin_mode:
+          $ref: '#/components/schemas/MarginMode'
+        initial_margin:
+          type: string
+        realized_pnl:
+          type: string
+        status:
+          type: string
+          enum: [open, closed]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        margin_asset:
+          type: string
+        user:
+          type: string
+
+    PositionConfig:
+      type: object
+      properties:
+        symbol:
+          type: string
+        leverage:
+          type: integer
+        margin_mode:
+          $ref: '#/components/schemas/MarginMode'
+        max_leverage:
+          type: integer
+        min_leverage:
+          type: integer
+
+    Balance:
+      type: object
+      properties:
+        id:
+          type: string
+        token:
+          type: string
+        free:
+          type: string
+        locked:
+          type: string
+        total:
+          type: string
+        account_type:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        inbound:
+          type: string
+        is_enabled:
+          type: boolean
+        kind:
+          type: string
+        last_tx:
+          type: string
+        last_tx_updated_at:
+          type: integer
+        occupied:
+          type: string
+        outbound:
+          type: string
+        ref_id:
+          type: integer
+        version:
+          type: integer
+        wallet_id:
+          type: string
+
+    SymbolInfo:
+      type: object
+      properties:
+        symbol:
+          type: string
+        base:
+          type: string
+        quote:
+          type: string
+        status:
+          type: string
+        min_qty:
+          type: string
+        max_qty:
+          type: string
+        tick_size:
+          type: string
+        step_size:
+          type: string
+
+    SymbolMarket:
+      type: object
+      properties:
+        symbol:
+          type: string
+        last_price:
+          type: string
+        mark_price:
+          type: string
+        index_price:
+          type: string
+        volume_24h:
+          type: string
+        turnover_24h:
+          type: string
+        high_24h:
+          type: string
+        low_24h:
+          type: string
+        change_24h:
+          type: string
+        change_percent_24h:
+          type: string
+
+    SymbolPrice:
+      type: object
+      properties:
+        symbol:
+          type: string
+        base:
+          type: string
+        quote:
+          type: string
+        last_price:
+          type: string
+        mark_price:
+          type: string
+        index_price:
+          type: string
+        mid_price:
+          type: string
+        spread:
+          type: array
+          items:
+            type: string
+        time:
+          type: string
+          format: date-time
+
+    DepthBook:
+      type: object
+      properties:
+        symbol:
+          type: string
+        asks:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+            description: [price, quantity]
+        bids:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+            minItems: 2
+            maxItems: 2
+            description: [price, quantity]
+        timestamp:
+          type: integer
+
+    RecentTrade:
+      type: object
+      properties:
+        id:
+          type: integer
+        symbol:
+          type: string
+        side:
+          $ref: '#/components/schemas/OrderSide'
+        qty:
+          type: string
+        price:
+          type: string
+        timestamp:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    FundingRates:
+      type: object
+      properties:
+        symbol:
+          type: string
+        funding_rate:
+          type: string
+        next_funding_time:
+          type: integer
+        predicted_funding_rate:
+          type: string
+
+    ServerTime:
+      type: object
+      properties:
+        server_time:
+          type: integer
+        timestamp:
+          type: integer
+
+    Kline:
+      type: object
+      properties:
+        time:
+          type: integer
+        open:
+          type: string
+        high:
+          type: string
+        low:
+          type: string
+        close:
+          type: string
+        volume:
+          type: string
+        symbol:
+          type: string
+
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        timestamp:
+          type: integer
+
+    # Enums
+    OrderSide:
+      type: string
+      enum: [buy, sell]
+
+    OrderType:
+      type: string
+      enum: [limit, market]
+
+    OrderStatus:
+      type: string
+      enum: [open, canceled, filled, rejected, untriggered]
+
+    TimeInForce:
+      type: string
+      enum: [gtc, ioc, alo]
+
+    MarginMode:
+      type: string
+      enum: [cross, isolated]
+
+    Resolution:
+      type: string
+      enum: [1T, 3S, "1", "5", "15", "60", 1D, 1W, 1M]
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+
+
+
+
+
+
+
+
+
+
+
+
+
